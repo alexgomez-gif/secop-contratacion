@@ -1,5 +1,8 @@
 """Pruebas de las figuras del README, generadas desde reports/consultas/*.csv."""
 
+import re
+
+from proyecto.carrusel import generar as generar_carrusel
 from proyecto.figuras import generar, numero
 
 
@@ -18,3 +21,10 @@ def test_generar_tres_figuras(tmp_path):
     ]
     for ruta in rutas:
         assert ruta.read_bytes().startswith(b"\x89PNG")
+
+
+def test_carrusel_seis_laminas(tmp_path):
+    ruta = generar_carrusel(tmp_path / "carrusel.pdf")
+    contenido = ruta.read_bytes()
+    assert contenido.startswith(b"%PDF")
+    assert len(re.findall(rb"/Type /Page[^s]", contenido)) == 6

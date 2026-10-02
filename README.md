@@ -69,7 +69,7 @@ flowchart LR
 4. **Análisis SQL** (`sql/analisis/`): diez consultas con funciones de ventana (`RANK`, `LAG`, sumas acumuladas, barrido de eventos). Cada una documenta su pregunta, su resultado y su interpretación ([tabla de hallazgos](sql/README.md)).
 5. **Figuras** (`src/proyecto/figuras.py`): una gráfica por hallazgo, generada desde los CSV de las consultas, en `docs/figuras/`.
 6. **Dashboard** (`powerbi/`): proyecto PBIP con tres páginas (Resumen, Entidades y Alertas), filtros sincronizados por departamento, modalidad y mes, y medidas de inteligencia de tiempo.
-7. **Calidad del código:** 47 tests con pytest y ruff en GitHub Actions en cada push.
+7. **Calidad del código:** 48 tests con pytest y ruff en GitHub Actions en cada push.
 
 ## Hallazgos
 
@@ -146,7 +146,7 @@ python -m proyecto.secop --anio 2025   # descarga + carga en DuckDB (~16 min, 44
 python -m proyecto.modelo              # limpieza + modelo + validaciones + Parquet (~15 s)
 python -m proyecto.analisis            # 10 consultas -> reports/consultas/*.csv
 python -m proyecto.figuras             # 3 figuras de hallazgos -> docs/figuras/*.png
-pytest                                 # 47 tests
+pytest                                 # 48 tests
 ```
 
 La descarga es reanudable: si se interrumpe, vuelve a ejecutar el mismo

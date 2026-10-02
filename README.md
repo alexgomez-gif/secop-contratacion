@@ -66,6 +66,7 @@ Documentación:
 - [Modelo de datos](docs/modelo_datos.md): diagrama, decisiones de diseño y diccionario.
 - [Decisiones de limpieza](docs/decisiones_limpieza.md): cada regla con su evidencia e impacto.
 - [Dashboard de Power BI](powerbi/README.md): páginas, medidas DAX y cómo abrirlo.
+- [Publicación](docs/publicacion/novypro.md): pasos para NovyPro, capturas y [guion del video](docs/publicacion/guion_video.md).
 
 ```python
 from proyecto.db import conectar

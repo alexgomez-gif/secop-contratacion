@@ -56,6 +56,7 @@ comando y continúa desde la última página guardada.
 
 ```python
 from proyecto.db import conectar
+
 con = conectar()
 con.sql("SELECT modalidad_de_contratacion, count(*) FROM stg_contratos GROUP BY 1")
 ```

@@ -1,0 +1,92 @@
+/// Tabla de fechas (dim_fecha), marcada como tabla de fechas. Se relaciona con la fecha de firma (activa) y con las de inicio y fin (inactivas, para USERELATIONSHIP).
+table Calendario
+	lineageTag: 9763c83e-9f22-58d9-90d6-8eeff5bc6a0e
+	dataCategory: Time
+
+	column Fecha
+		dataType: dateTime
+		isKey
+		formatString: Short Date
+		lineageTag: f4ec8fe6-6e12-5a42-b8d5-9ed574131b5e
+		summarizeBy: none
+		sourceColumn: fecha
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Año'
+		dataType: int64
+		formatString: 0
+		lineageTag: 7121313d-4b99-59db-a1b4-f20f98933115
+		summarizeBy: none
+		sourceColumn: anio
+
+		annotation SummarizationSetBy = Automatic
+
+	column Trimestre
+		dataType: int64
+		formatString: 0
+		lineageTag: 7d241dcf-26e4-5c4f-8396-3f8342715f92
+		summarizeBy: none
+		sourceColumn: trimestre
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mes
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 00d33361-9081-5853-8e91-4705397b6a3a
+		summarizeBy: none
+		sourceColumn: mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Nombre del mes'
+		dataType: string
+		lineageTag: f612c93e-2f6e-5b40-8c67-e54b1015b8b5
+		summarizeBy: none
+		sourceColumn: nombre_mes
+		sortByColumn: Mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Año-mes'
+		dataType: string
+		lineageTag: 20ff60bc-f26b-50f8-9eea-a830dbbd9852
+		summarizeBy: none
+		sourceColumn: anio_mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fin de semana'
+		dataType: boolean
+		lineageTag: d80a9598-d6cf-5c4c-b5b6-28a4bd30dcfb
+		summarizeBy: none
+		sourceColumn: es_fin_de_semana
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'En periodo de análisis'
+		dataType: boolean
+		lineageTag: cf60e008-5db0-5bbd-b93e-356bf3a3119f
+		summarizeBy: none
+		sourceColumn: en_periodo_analisis
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Calendario = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaDatos & "dim_fecha.parquet")),
+				    Columnas = Table.SelectColumns(Origen, {"fecha", "anio", "trimestre", "mes", "nombre_mes", "anio_mes", "es_fin_de_semana", "en_periodo_analisis"}),
+				    Tipos = Table.TransformColumnTypes(
+				        Columnas,
+				        {{"fecha", type date}, {"anio", Int64.Type}, {"trimestre", Int64.Type}, {"mes", Int64.Type}, {"nombre_mes", type text}, {"anio_mes", type text}, {"es_fin_de_semana", type logical}, {"en_periodo_analisis", type logical}}
+				    )
+				in
+				    Tipos
+
+	annotation PBI_ResultType = Table

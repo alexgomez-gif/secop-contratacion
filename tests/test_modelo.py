@@ -5,7 +5,7 @@ from test_secop import COLUMNAS_RAW
 
 from proyecto.config import leer_sql
 from proyecto.db import conectar
-from proyecto.modelo import construir, validar
+from proyecto.modelo import _columnas_exportacion, construir, validar
 
 BASE = {
     "codigo_entidad": "100",
@@ -240,3 +240,98 @@ def test_grupo_modalidad(modalidad, grupo):
         ).fetchone()[0]
         == grupo
     )
+
+
+def _directo_juridica(fecha: str, **cambios) -> dict:
+    return {
+        "tipodocproveedor": "NIT",
+        "documento_proveedor": "900123456",
+        "proveedor_adjudicado": "EMPRESA SAS",
+        "fecha_de_firma": f"{fecha}T00:00:00.000",
+    } | cambios
+
+
+def test_encadenado_30d_cuenta_dias_desde_el_directo_anterior():
+    con = _modelo(
+        [
+            _directo_juridica("2025-01-01"),
+            _directo_juridica("2025-01-20"),
+            _directo_juridica("2025-03-31"),
+            # Competitivo con la misma empresa: no cuenta ni corta la secuencia
+            _directo_juridica(
+                "2025-01-25", modalidad_de_contratacion="Licitación pública"
+            ),
+        ]
+    )
+    filas = con.sql(
+        "SELECT fecha_firma::VARCHAR, dias_desde_directo_anterior, encadenado_30d "
+        "FROM fct_contratos ORDER BY fecha_firma"
+    ).fetchall()
+    assert filas == [
+        ("2025-01-01", None, False),
+        ("2025-01-20", 19, True),
+        ("2025-01-25", None, False),
+        ("2025-03-31", 70, False),
+    ]
+
+
+def test_encadenado_30d_excluye_personas_naturales():
+    con = _modelo([{}, {"fecha_de_firma": "2025-03-05T00:00:00.000"}])
+    assert (
+        con.sql("SELECT count(*) FROM fct_contratos WHERE encadenado_30d").fetchone()[0]
+        == 0
+    )
+
+
+def test_max_contratos_simultaneos_de_persona_natural():
+    con = _modelo(
+        [
+            {},  # 2025-03-02 a 2025-12-31
+            {"fecha_de_inicio_del_contrato": "2025-06-01T00:00:00.000"},
+            {
+                "fecha_de_inicio_del_contrato": "2026-01-01T00:00:00.000",
+                "fecha_de_fin_del_contrato": "2026-06-30T00:00:00.000",
+            },
+            # Una empresa no recibe el indicador
+            {"tipodocproveedor": "NIT", "documento_proveedor": "900123456"},
+        ]
+    )
+    filas = con.sql(
+        "SELECT tipo_persona, max_contratos_simultaneos FROM dim_proveedor "
+        "WHERE proveedor_key <> -1 ORDER BY 1"
+    ).fetchall()
+    assert filas == [("Jurídica", None), ("Natural", 2)]
+
+
+def test_etiqueta_entidad_distingue_nombres_repetidos():
+    con = _modelo(
+        [
+            {"codigo_entidad": "1", "nombre_entidad": "PERSONERIA", "ciudad": "Tunja"},
+            {"codigo_entidad": "2", "nombre_entidad": "PERSONERIA", "ciudad": "Pasto"},
+            {"codigo_entidad": "3", "nombre_entidad": "ALCALDIA DE PRUEBA"},
+        ]
+    )
+    etiquetas = con.sql(
+        "SELECT etiqueta_entidad FROM dim_entidad ORDER BY entidad_key"
+    ).fetchall()
+    assert etiquetas == [
+        ("PERSONERIA (Tunja)",),
+        ("PERSONERIA (Pasto)",),
+        ("ALCALDIA DE PRUEBA",),
+    ]
+
+
+def test_dim_fecha_marca_los_anios_con_firmas():
+    con = _modelo([{"fecha_de_fin_del_contrato": "2026-03-31T00:00:00.000"}])
+    filas = con.sql(
+        "SELECT anio, bool_and(en_periodo_analisis), count(*) FROM dim_fecha "
+        "GROUP BY anio ORDER BY anio"
+    ).fetchall()
+    assert filas == [(2025, True, 365), (2026, False, 365)]
+
+
+def test_exportacion_convierte_decimales_a_double():
+    con = _modelo([{}])
+    columnas = _columnas_exportacion(con, "fct_contratos")
+    assert 'CAST("valor_analisis" AS DOUBLE) AS "valor_analisis"' in columnas
+    assert '"id_contrato"' in columnas

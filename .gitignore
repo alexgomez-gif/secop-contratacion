@@ -57,3 +57,8 @@ Thumbs.db
 # Bases de datos locales
 *.duckdb
 *.duckdb.wal
+
+# Power BI: caché con datos y configuración local del proyecto PBIP
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+*.pbix

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "entidadesTabla",
+  "position": {
+    "x": 16,
+    "y": 180,
+    "z": 3000,
+    "height": 526,
+    "width": 776,
+    "tabOrder": 3000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Entidad"
+                    }
+                  },
+                  "Property": "Entidad"
+                }
+              },
+              "queryRef": "Entidad.Entidad",
+              "nativeQueryRef": "Entidad"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Entidad"
+                    }
+                  },
+                  "Property": "Departamento"
+                }
+              },
+              "queryRef": "Entidad.Departamento",
+              "nativeQueryRef": "Departamento"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Entidad"
+                    }
+                  },
+                  "Property": "Orden"
+                }
+              },
+              "queryRef": "Entidad.Orden",
+              "nativeQueryRef": "Orden"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contratos"
+                    }
+                  },
+                  "Property": "Contratos firmados"
+                }
+              },
+              "queryRef": "Contratos.Contratos firmados",
+              "nativeQueryRef": "Contratos firmados",
+              "displayName": "Contratos"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contratos"
+                    }
+                  },
+                  "Property": "Valor contratado"
+                }
+              },
+              "queryRef": "Contratos.Valor contratado",
+              "nativeQueryRef": "Valor contratado",
+              "displayName": "Valor"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contratos"
+                    }
+                  },
+                  "Property": "% valor directa"
+                }
+              },
+              "queryRef": "Contratos.% valor directa",
+              "nativeQueryRef": "% valor directa",
+              "displayName": "% directa"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contratos"
+                    }
+                  },
+                  "Property": "Dif. vs su orden (pp)"
+                }
+              },
+              "queryRef": "Contratos.Dif. vs su orden (pp)",
+              "nativeQueryRef": "Dif. vs su orden (pp)",
+              "displayName": "Dif. vs su orden (pp)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contratos"
+                    }
+                  },
+                  "Property": "% 5 mayores proveedores"
+                }
+              },
+              "queryRef": "Contratos.% 5 mayores proveedores",
+              "nativeQueryRef": "% 5 mayores proveedores",
+              "displayName": "% 5 mayores proveedores"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Contratos"
+                  }
+                },
+                "Property": "Valor contratado"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Entidades: contratación directa y concentración de proveedores'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

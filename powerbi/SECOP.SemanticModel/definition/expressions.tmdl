@@ -1,0 +1,6 @@
+/// Carpeta con los Parquet de data/processed (termina en \). Cámbiala en
+/// Transformar datos > Editar parámetros.
+expression RutaDatos = "C:\secop-contratacion\data\processed\" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: 54b0f3c6-59ca-5623-b3f8-5babdb0b667f
+
+	annotation PBI_ResultType = Text

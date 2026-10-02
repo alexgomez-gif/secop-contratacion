@@ -1,6 +1,10 @@
 -- Tabla de hechos. Grano: un contrato (id_contrato).
 -- Atributos propios del contrato (tipo, estado, objeto) quedan aquí como
 -- dimensiones degeneradas: tienen pocos valores o uno distinto por fila.
+-- dias_desde_directo_anterior / encadenado_30d: solo contratos directos con
+-- personas jurídicas; días desde el contrato directo anterior de la misma
+-- pareja entidad–proveedor (como en sql/analisis/07). Es un patrón a revisar,
+-- no una prueba de irregularidad.
 CREATE OR REPLACE TABLE fct_contratos AS
 SELECT
     c.id_contrato,
@@ -40,7 +44,19 @@ SELECT
     CASE WHEN NOT c.fechas_inconsistentes THEN c.fecha_fin - c.fecha_inicio END
         AS duracion_dias,
     coalesce(c.fechas_inconsistentes, FALSE) AS fechas_inconsistentes,
-    c.fecha_fuera_de_rango
+    c.fecha_fuera_de_rango,
+    -- Alertas
+    CASE
+        WHEN m.grupo_modalidad = 'Directa' AND p.tipo_persona = 'Jurídica'
+            THEN c.fecha_firma - lag(c.fecha_firma) OVER (
+                PARTITION BY
+                    c.entidad_key,
+                    p.proveedor_key,
+                    m.grupo_modalidad = 'Directa' AND p.tipo_persona = 'Jurídica'
+                ORDER BY c.fecha_firma, c.id_contrato
+            )
+    END AS dias_desde_directo_anterior,
+    coalesce(dias_desde_directo_anterior <= 30, FALSE) AS encadenado_30d
 FROM int_contratos AS c
 LEFT JOIN dim_proveedor AS p
     ON c.documento_proveedor_norm = p.documento

@@ -65,6 +65,7 @@ Documentación:
 
 - [Modelo de datos](docs/modelo_datos.md): diagrama, decisiones de diseño y diccionario.
 - [Decisiones de limpieza](docs/decisiones_limpieza.md): cada regla con su evidencia e impacto.
+- [Dashboard de Power BI](powerbi/README.md): páginas, medidas DAX y cómo abrirlo.
 
 ```python
 from proyecto.db import conectar
@@ -95,7 +96,8 @@ Tabla completa de hallazgos en [`sql/README.md`](sql/README.md). Lo principal (2
 - Las pymes firman el 52,5 % de los contratos con empresas, pero reciben el 22,6 % del valor.
 - Diciembre tiene la menor cantidad de contratos y el mayor valor; en noviembre la directa llega al 69 % del valor del mes, antes de la ley de garantías.
 
-Informe en Power BI: pendiente.
+Dashboard de Power BI de tres páginas (Resumen, Entidades y Alertas) en
+[`powerbi/`](powerbi/README.md): ábrelo con `powerbi/SECOP.pbip`.
 
 ## Autoría
 

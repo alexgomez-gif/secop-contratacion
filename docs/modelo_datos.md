@@ -2,7 +2,9 @@
 
 Modelo estrella con una tabla de hechos de contratos y cuatro dimensiones.
 Se construye con `python -m proyecto.modelo` a partir de `stg_contratos` y
-se exporta a `data/processed/*.parquet` para Power BI.
+se exporta a `data/processed/*.parquet` para Power BI (los `DECIMAL` se
+exportan como `DOUBLE`, porque Power BI no admite `DECIMAL(24,2)`). El
+informe está en [`powerbi/`](../powerbi/README.md).
 
 ```mermaid
 erDiagram
@@ -120,6 +122,8 @@ Las reglas de limpieza (L1–L9) están en
 | `duracion_dias` | entero | `fecha_fin - fecha_inicio`; nula si fechas incoherentes |
 | `fechas_inconsistentes` | booleano | Fin antes del inicio (L8) |
 | `fecha_fuera_de_rango` | booleano | Alguna fecha fuera de 2000–2060 (L8) |
+| `dias_desde_directo_anterior` | entero | Solo directa con persona jurídica: días desde el contrato directo anterior de la misma pareja entidad–proveedor |
+| `encadenado_30d` | booleano | `dias_desde_directo_anterior` ≤ 30 (alerta de contratos encadenados, como `sql/analisis/07`) |
 
 ### dim_entidad
 
@@ -133,6 +137,7 @@ Las reglas de limpieza (L1–L9) están en
 | `sector` | Sector administrativo (L5) |
 | `entidad_centralizada` | `true` si es centralizada, `false` si es descentralizada |
 | `nombres_distintos` | Cuántos nombres tuvo en los datos |
+| `etiqueta_entidad` | Nombre único para mostrar: si dos entidades se llaman igual se añade la ciudad (y el código si aún coinciden) |
 
 ### dim_proveedor
 
@@ -144,6 +149,7 @@ Las reglas de limpieza (L1–L9) están en
 | `tipo_documento` | NIT, Cédula de Ciudadanía… |
 | `tipo_persona` | Natural, Jurídica, Sin clasificar (L6) |
 | `nombres_distintos` | Cuántos nombres tuvo en los datos |
+| `max_contratos_simultaneos` | Solo personas naturales: máximo de contratos de prestación de servicios vigentes el mismo día (como `sql/analisis/10`) |
 
 ### dim_modalidad
 
@@ -163,6 +169,7 @@ Las reglas de limpieza (L1–L9) están en
 | `nombre_mes`, `anio_mes` | "Enero", "2025-01" |
 | `dia_semana`, `nombre_dia`, `es_fin_de_semana` | 1 = lunes … 7 = domingo |
 | `semana_iso` | Semana ISO del año |
+| `en_periodo_analisis` | Año con contratos firmados; el informe de Power BI filtra por esta columna |
 
 ## Validaciones automáticas
 

@@ -1,0 +1,79 @@
+/// Proveedor (dim_proveedor). Los nombres de personas naturales se reemplazan por '(persona natural)' al cargar.
+table Proveedor
+	lineageTag: 4c79bace-aa95-5dfe-8870-6e1d7f4e64d8
+
+	column proveedor_key
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: c146ab68-1dd0-528b-adca-3689f87da7a2
+		summarizeBy: none
+		sourceColumn: proveedor_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Proveedor
+		dataType: string
+		lineageTag: 6b72539a-301e-55e5-97aa-226305eb7ba2
+		summarizeBy: none
+		sourceColumn: proveedor
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tipo de persona'
+		dataType: string
+		lineageTag: 49e6496c-bd16-5631-a98e-c7a0726ea140
+		summarizeBy: none
+		sourceColumn: tipo_persona
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Máx. contratos simultáneos'
+		dataType: int64
+		formatString: 0
+		lineageTag: d027b308-4b87-534a-acee-23a0b7073229
+		summarizeBy: none
+		sourceColumn: max_contratos_simultaneos
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Contratos simultáneos'
+		dataType: string
+		lineageTag: 4242da09-5a9b-555e-8638-48f3ab066c50
+		summarizeBy: none
+		sourceColumn: grupo_simultaneos
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Proveedor = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaDatos & "dim_proveedor.parquet")),
+				    Columnas = Table.SelectColumns(Origen, {"proveedor_key", "nombre_proveedor", "tipo_persona", "max_contratos_simultaneos"}),
+				    Tipos = Table.TransformColumnTypes(
+				        Columnas,
+				        {{"proveedor_key", Int64.Type}, {"nombre_proveedor", type text}, {"tipo_persona", type text}, {"max_contratos_simultaneos", Int64.Type}}
+				    ),
+				    // Privacidad: no se cargan nombres de personas naturales
+				    ConNombre = Table.AddColumn(
+				        Tipos,
+				        "proveedor",
+				        each if [tipo_persona] = "Natural" then "(persona natural)" else [nombre_proveedor],
+				        type text
+				    ),
+				    SinNombreOriginal = Table.RemoveColumns(ConNombre, {"nombre_proveedor"}),
+				    ConGrupo = Table.AddColumn(
+				        SinNombreOriginal,
+				        "grupo_simultaneos",
+				        each
+				            if [max_contratos_simultaneos] = null then null
+				            else if [max_contratos_simultaneos] >= 5 then "5 o más"
+				            else Text.From([max_contratos_simultaneos]),
+				        type text
+				    )
+				in
+				    ConGrupo
+
+	annotation PBI_ResultType = Table

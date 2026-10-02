@@ -1,0 +1,71 @@
+/// Entidad contratante (dim_entidad).
+table Entidad
+	lineageTag: 693f2233-891b-5eba-b051-60f241e9b965
+
+	column entidad_key
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: 012946a3-06e0-5c8d-b362-413194f09c98
+		summarizeBy: none
+		sourceColumn: entidad_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Entidad
+		dataType: string
+		lineageTag: 85183672-6c6c-5ed9-91b1-efe333d3e64e
+		summarizeBy: none
+		sourceColumn: etiqueta_entidad
+
+		annotation SummarizationSetBy = Automatic
+
+	column Departamento
+		dataType: string
+		dataCategory: StateOrProvince
+		lineageTag: 3b85dd6c-6480-59db-8678-ea1d0aa1af2c
+		summarizeBy: none
+		sourceColumn: departamento
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ciudad
+		dataType: string
+		dataCategory: City
+		lineageTag: 76bb26e1-1275-5ffb-872b-ae706d88dd1c
+		summarizeBy: none
+		sourceColumn: ciudad
+
+		annotation SummarizationSetBy = Automatic
+
+	column Orden
+		dataType: string
+		lineageTag: 71a299de-ded3-5f3b-a214-ee082c54ffc4
+		summarizeBy: none
+		sourceColumn: orden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sector
+		dataType: string
+		lineageTag: ce5844d9-1304-59be-b4b8-9560f809c3f4
+		summarizeBy: none
+		sourceColumn: sector
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Entidad = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaDatos & "dim_entidad.parquet")),
+				    Columnas = Table.SelectColumns(Origen, {"entidad_key", "etiqueta_entidad", "departamento", "ciudad", "orden", "sector"}),
+				    Tipos = Table.TransformColumnTypes(
+				        Columnas,
+				        {{"entidad_key", Int64.Type}, {"etiqueta_entidad", type text}, {"departamento", type text}, {"ciudad", type text}, {"orden", type text}, {"sector", type text}}
+				    )
+				in
+				    Tipos
+
+	annotation PBI_ResultType = Table

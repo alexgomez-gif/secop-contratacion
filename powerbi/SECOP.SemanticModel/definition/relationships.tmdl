@@ -1,0 +1,25 @@
+relationship 47a5d8bf-0041-537f-a0ee-12ee79a685e1
+	fromColumn: Contratos.entidad_key
+	toColumn: Entidad.entidad_key
+
+relationship 2d806b0c-2613-5b0f-b9dc-ef8866a4c12f
+	fromColumn: Contratos.proveedor_key
+	toColumn: Proveedor.proveedor_key
+
+relationship 10f3a458-d1ae-5ca7-b3a4-5b21d91b457d
+	fromColumn: Contratos.modalidad_key
+	toColumn: Modalidad.modalidad_key
+
+relationship 2996475f-990e-54f2-b117-1978c1b7d466
+	fromColumn: Contratos.'Fecha de firma'
+	toColumn: Calendario.Fecha
+
+relationship 4361c58b-80a5-5944-83ab-5746299152d8
+	isActive: false
+	fromColumn: Contratos.'Fecha de inicio'
+	toColumn: Calendario.Fecha
+
+relationship 14b6b9dd-2931-5d13-9344-92c8309605a8
+	isActive: false
+	fromColumn: Contratos.'Fecha de fin'
+	toColumn: Calendario.Fecha

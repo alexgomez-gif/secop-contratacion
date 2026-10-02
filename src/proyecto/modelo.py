@@ -101,11 +101,30 @@ def resumen(con: duckdb.DuckDBPyConnection) -> None:
         log.info("  %-40s %10s", motivo, f"{n:,}")
 
 
+def _columnas_exportacion(con: duckdb.DuckDBPyConnection, tabla: str) -> str:
+    """Columnas de la tabla con los DECIMAL convertidos a DOUBLE.
+
+    Power BI no admite DECIMAL(24,2) (su decimal fijo es de 19 dígitos y 4
+    decimales); como DOUBLE los montos en pesos no pierden precisión práctica.
+    """
+    columnas = []
+    for nombre, tipo, *_ in con.sql(f"DESCRIBE {tabla}").fetchall():
+        if tipo.startswith("DECIMAL"):
+            columnas.append(f'CAST("{nombre}" AS DOUBLE) AS "{nombre}"')
+        else:
+            columnas.append(f'"{nombre}"')
+    return ", ".join(columnas)
+
+
 def exportar(con: duckdb.DuckDBPyConnection) -> None:
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     for tabla in TABLAS_MODELO:
         destino = PROCESSED_DIR / f"{tabla}.parquet"
-        con.execute(f"COPY {tabla} TO '{destino.as_posix()}' (COMPRESSION zstd)")
+        columnas = _columnas_exportacion(con, tabla)
+        con.execute(
+            f"COPY (SELECT {columnas} FROM {tabla}) "
+            f"TO '{destino.as_posix()}' (COMPRESSION zstd)"
+        )
         log.info("Exportado %s", destino.name)
 
 

@@ -1,0 +1,446 @@
+/// Un contrato de SECOP II por fila (fct_contratos).
+table Contratos
+	lineageTag: 2716e66b-2ea9-58e7-9089-9e1de1d1ec47
+
+	/// Suma de valor_analisis: excluye los valores marcados por la regla L7.
+	measure 'Valor contratado' = SUM ( Contratos[Valor] )
+		formatString: "$"#,0
+		displayFolder: 1. Base
+		lineageTag: fbd4e9d0-f200-52ea-907e-f2fb9e7e387b
+
+	/// Número de contratos.
+	measure 'Contratos firmados' = COUNTROWS ( Contratos )
+		formatString: #,0
+		displayFolder: 1. Base
+		lineageTag: 0d1b7f02-7e68-5704-b75f-ee6de99afd71
+
+	/// Valor contratado entre los contratos con valor válido.
+	measure 'Valor promedio por contrato' = DIVIDE ( [Valor contratado], COUNT ( Contratos[Valor] ) )
+		formatString: "$"#,0
+		displayFolder: 1. Base
+		lineageTag: 71ec67de-9181-5674-a0ae-a0b1d798e63f
+
+	/// Entidades con al menos un contrato en el contexto.
+	measure Entidades = DISTINCTCOUNT ( Contratos[entidad_key] )
+		formatString: #,0
+		displayFolder: 1. Base
+		lineageTag: 56957ace-6b8f-594c-a00d-b86906bcf38e
+
+	/// Proveedores identificados (sin la clave -1).
+	measure Proveedores =
+			CALCULATE (
+			    DISTINCTCOUNT ( Contratos[proveedor_key] ),
+			    KEEPFILTERS ( Contratos[proveedor_key] <> -1 )
+			)
+		formatString: #,0
+		displayFolder: 1. Base
+		lineageTag: be7502cc-a80d-50fe-95d4-d193826c3aa6
+
+	/// Valor de los contratos del grupo Directa. KEEPFILTERS respeta la segmentación de modalidad.
+	measure 'Valor directa' =
+			CALCULATE (
+			    [Valor contratado],
+			    KEEPFILTERS ( Modalidad[Grupo de modalidad] = "Directa" )
+			)
+		formatString: "$"#,0
+		displayFolder: 2. Modalidad
+		lineageTag: ee6839ae-fd64-55d6-914a-ee55d45f0738
+
+	/// Contratos del grupo Directa.
+	measure 'Contratos directa' =
+			CALCULATE (
+			    [Contratos firmados],
+			    KEEPFILTERS ( Modalidad[Grupo de modalidad] = "Directa" )
+			)
+		formatString: #,0
+		displayFolder: 2. Modalidad
+		lineageTag: 04530c1c-e8a3-5525-9663-3a1262602502
+
+	/// Parte del valor que va por contratación directa.
+	measure '% valor directa' = DIVIDE ( [Valor directa], [Valor contratado] )
+		formatString: 0.0%
+		displayFolder: 2. Modalidad
+		lineageTag: 329cafc2-50a9-55f4-ba6e-0971eb51878a
+
+	/// Parte de los contratos que va por contratación directa.
+	measure '% contratos directa' = DIVIDE ( [Contratos directa], [Contratos firmados] )
+		formatString: 0.0%
+		displayFolder: 2. Modalidad
+		lineageTag: 04addcf9-179e-5930-bf71-6dcb1e3d2de9
+
+	/// % del valor por directa del conjunto de entidades del mismo orden (Nacional, Territorial...) en todo el país.
+	measure '% valor directa de su orden' =
+			VAR orden = SELECTEDVALUE ( Entidad[Orden] )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( orden ),
+			        DIVIDE (
+			            CALCULATE ( [Valor directa], REMOVEFILTERS ( Entidad ), Entidad[Orden] = orden ),
+			            CALCULATE ( [Valor contratado], REMOVEFILTERS ( Entidad ), Entidad[Orden] = orden )
+			        )
+			    )
+		formatString: 0.0%
+		displayFolder: 2. Modalidad
+		lineageTag: e4e3bd92-91e9-50b6-8a73-89184da38380
+
+	/// Puntos porcentuales de % valor directa por encima (+) o por debajo (-) de su orden.
+	measure 'Dif. vs su orden (pp)' =
+			VAR propio = [% valor directa]
+			VAR orden = [% valor directa de su orden]
+			RETURN
+			    IF ( NOT ISBLANK ( propio ) && NOT ISBLANK ( orden ), ( propio - orden ) * 100 )
+		formatString: +0.0;-0.0;0.0
+		displayFolder: 2. Modalidad
+		lineageTag: 60e03745-b69e-5e8e-8805-1fa607391b01
+
+	/// Parte del valor contratado con empresas (personas jurídicas) que va a pymes.
+	measure '% valor pyme' =
+			DIVIDE (
+			    CALCULATE (
+			        [Valor contratado],
+			        KEEPFILTERS ( Contratos[Proveedor pyme] = TRUE () ),
+			        KEEPFILTERS ( Proveedor[Tipo de persona] = "Jurídica" )
+			    ),
+			    CALCULATE ( [Valor contratado], KEEPFILTERS ( Proveedor[Tipo de persona] = "Jurídica" ) )
+			)
+		formatString: 0.0%
+		displayFolder: 2. Modalidad
+		lineageTag: 4cc56f9f-7d43-57bc-8402-92e5aac14419
+
+	/// Acumulado desde el 1 de enero hasta la última fecha del contexto.
+	measure 'Valor acumulado del año' = TOTALYTD ( [Valor contratado], Calendario[Fecha] )
+		formatString: "$"#,0
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: 359c0340-8e3d-550e-8ff3-129eea698b67
+
+	/// Valor del último mes del contexto (en una fila de mes, ese mes; en el año, diciembre).
+	measure 'Valor del último mes' =
+			VAR ultimaFecha = MAX ( Calendario[Fecha] )
+			RETURN
+			    CALCULATE (
+			        [Valor contratado],
+			        DATESBETWEEN ( Calendario[Fecha], EOMONTH ( ultimaFecha, -1 ) + 1, EOMONTH ( ultimaFecha, 0 ) )
+			    )
+		formatString: "$"#,0
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: c2f52074-7be6-5966-ae4f-cd6fd8eb3bbf
+
+	/// Valor del mes anterior al último mes del contexto.
+	measure 'Valor del mes anterior' =
+			VAR ultimaFecha = MAX ( Calendario[Fecha] )
+			RETURN
+			    CALCULATE (
+			        [Valor contratado],
+			        DATESBETWEEN ( Calendario[Fecha], EOMONTH ( ultimaFecha, -2 ) + 1, EOMONTH ( ultimaFecha, -1 ) )
+			    )
+		formatString: "$"#,0
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: 11f4ff62-da45-50cc-b907-e197188903fb
+
+	/// Variación del último mes del contexto frente al mes anterior.
+	measure 'Var. % último mes vs anterior' =
+			VAR actual = [Valor del último mes]
+			VAR anterior = [Valor del mes anterior]
+			RETURN
+			    IF ( NOT ISBLANK ( actual ) && NOT ISBLANK ( anterior ), DIVIDE ( actual - anterior, anterior ) )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: 48a57a57-e2df-5687-99c1-21ab1aed3d1e
+
+	/// Mismo periodo del año anterior. Vacío mientras el modelo tenga un solo año.
+	measure 'Valor año anterior' = CALCULATE ( [Valor contratado], SAMEPERIODLASTYEAR ( Calendario[Fecha] ) )
+		formatString: "$"#,0
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: 18045fa2-c41d-5eca-b869-1537af5a20f6
+
+	/// Variación frente al mismo periodo del año anterior.
+	measure 'Var. % interanual' =
+			VAR actual = [Valor contratado]
+			VAR anterior = [Valor año anterior]
+			RETURN
+			    IF ( NOT ISBLANK ( actual ) && NOT ISBLANK ( anterior ), DIVIDE ( actual - anterior, anterior ) )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: a4effcc3-8307-5247-a470-20d0beb007ee
+
+	/// Promedio del valor mensual de los últimos 3 meses con datos.
+	measure 'Media móvil 3 meses' =
+			VAR periodo =
+			    DATESINPERIOD ( Calendario[Fecha], MAX ( Calendario[Fecha] ), -3, MONTH )
+			VAR meses =
+			    CALCULATETABLE (
+			        ADDCOLUMNS ( VALUES ( Calendario[Año-mes] ), "@valor", [Valor contratado] ),
+			        periodo
+			    )
+			RETURN
+			    AVERAGEX ( FILTER ( meses, NOT ISBLANK ( [@valor] ) ), [@valor] )
+		formatString: "$"#,0
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: 0bf691b6-5777-5eea-a7e0-c16a11137444
+
+	/// Valor del mes frente al mes promedio del periodo seleccionado (1,00 = mes promedio).
+	measure 'Índice de valor mensual' =
+			VAR promedio =
+			    AVERAGEX (
+			        FILTER (
+			            ADDCOLUMNS ( ALLSELECTED ( Calendario[Año-mes] ), "@valor", [Valor contratado] ),
+			            NOT ISBLANK ( [@valor] )
+			        ),
+			        [@valor]
+			    )
+			RETURN
+			    DIVIDE ( [Valor contratado], promedio )
+		formatString: 0.00
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: ceae3ac1-7bcf-508c-86a8-d49799d9357d
+
+	/// Valor contratado ubicado en el calendario por la fecha de inicio (relación inactiva).
+	measure 'Valor por fecha de inicio' =
+			CALCULATE (
+			    [Valor contratado],
+			    USERELATIONSHIP ( Contratos[Fecha de inicio], Calendario[Fecha] )
+			)
+		formatString: "$"#,0
+		displayFolder: 3. Inteligencia de tiempo
+		lineageTag: e76cf770-cc70-520a-b38f-cf3265eec503
+
+	/// Valor contratado sin el proveedor desconocido (-1); base de los % de concentración.
+	measure 'Valor con proveedor identificado' =
+			CALCULATE (
+			    [Valor contratado],
+			    KEEPFILTERS ( Contratos[proveedor_key] <> -1 )
+			)
+		formatString: "$"#,0
+		displayFolder: 4. Concentración
+		lineageTag: 6b714830-ac63-5406-ba0a-2a7a2e831c6a
+
+	/// Proveedores identificados con al menos un contrato de valor positivo.
+	measure 'Proveedores con valor' =
+			CALCULATE (
+			    DISTINCTCOUNT ( Contratos[proveedor_key] ),
+			    KEEPFILTERS ( Contratos[proveedor_key] <> -1 ),
+			    KEEPFILTERS ( Contratos[Valor] > 0 )
+			)
+		formatString: #,0
+		displayFolder: 4. Concentración
+		lineageTag: 67d7917e-ccdf-5d44-a644-1f8385271523
+
+	/// Valor de los 5 proveedores con más valor en el contexto (p. ej., en una entidad).
+	measure 'Valor 5 mayores proveedores' =
+			VAR proveedores =
+			    CALCULATETABLE (
+			        VALUES ( Contratos[proveedor_key] ),
+			        KEEPFILTERS ( Contratos[proveedor_key] <> -1 )
+			    )
+			VAR cinco = TOPN ( 5, proveedores, [Valor contratado], DESC )
+			RETURN
+			    CALCULATE ( [Valor contratado], cinco )
+		formatString: "$"#,0
+		displayFolder: 4. Concentración
+		lineageTag: f8dc8bfa-5edf-5ddf-abf2-6e0ba2646011
+
+	/// Parte del valor que se llevan los 5 mayores proveedores.
+	measure '% 5 mayores proveedores' = DIVIDE ( [Valor 5 mayores proveedores], [Valor con proveedor identificado] )
+		formatString: 0.0%
+		displayFolder: 4. Concentración
+		lineageTag: 920ea7fc-7bf5-5d38-a24d-8e6e60fba4e2
+
+	/// Parte del valor que se lleva el mayor proveedor.
+	measure '% mayor proveedor' =
+			VAR proveedores =
+			    CALCULATETABLE (
+			        VALUES ( Contratos[proveedor_key] ),
+			        KEEPFILTERS ( Contratos[proveedor_key] <> -1 )
+			    )
+			RETURN
+			    DIVIDE ( MAXX ( proveedores, [Valor contratado] ), [Valor con proveedor identificado] )
+		formatString: 0.0%
+		displayFolder: 4. Concentración
+		lineageTag: d1aac26e-af10-53a8-ab80-75513a906a71
+
+	/// 1 si la entidad tiene 20 o más proveedores con valor y los 5 mayores se llevan más del 50 %.
+	measure 'Entidad concentrada' = IF ( [Proveedores con valor] >= 20 && [% 5 mayores proveedores] > 0.5, 1 )
+		formatString: 0
+		displayFolder: 5. Alertas
+		lineageTag: 56e05315-88ba-534b-97af-d72a65314d71
+
+	/// Entidades que cumplen la regla de Entidad concentrada (sql/analisis/05).
+	measure 'Entidades concentradas' = SUMX ( VALUES ( Entidad[entidad_key] ), [Entidad concentrada] ) + 0
+		formatString: #,0
+		displayFolder: 5. Alertas
+		lineageTag: 391728be-cca4-5365-8705-d3c7b889df24
+
+	/// Contratos directos con una empresa firmados a 30 días o menos del anterior con la misma entidad.
+	measure 'Contratos encadenados' =
+			CALCULATE (
+			    [Contratos firmados],
+			    KEEPFILTERS ( Contratos[Encadenado 30 días] = TRUE () )
+			)
+		formatString: #,0
+		displayFolder: 5. Alertas
+		lineageTag: 7097f1e6-b943-5bb3-8c6e-9aaf5ab909a5
+
+	/// Valor de los contratos encadenados.
+	measure 'Valor encadenado' =
+			CALCULATE (
+			    [Valor contratado],
+			    KEEPFILTERS ( Contratos[Encadenado 30 días] = TRUE () )
+			)
+		formatString: "$"#,0
+		displayFolder: 5. Alertas
+		lineageTag: b616d020-6bbe-56c1-8aca-e1542b549194
+
+	/// Parejas entidad–empresa con 3 o más contratos encadenados (sql/analisis/07).
+	measure 'Parejas con contratos encadenados' =
+			VAR parejas =
+			    CALCULATETABLE (
+			        SUMMARIZE ( Contratos, Contratos[entidad_key], Contratos[proveedor_key] ),
+			        KEEPFILTERS ( Contratos[Encadenado 30 días] = TRUE () )
+			    )
+			RETURN
+			    COUNTROWS ( FILTER ( parejas, [Contratos encadenados] >= 3 ) ) + 0
+		formatString: #,0
+		displayFolder: 5. Alertas
+		lineageTag: 4bc475cd-f3dc-5284-99f4-510f04814b79
+
+	/// Personas naturales con contratos de prestación de servicios evaluables.
+	measure 'Personas con servicios' =
+			CALCULATE (
+			    DISTINCTCOUNT ( Contratos[proveedor_key] ),
+			    KEEPFILTERS ( Proveedor[Máx. contratos simultáneos] >= 1 )
+			)
+		formatString: #,0
+		displayFolder: 5. Alertas
+		lineageTag: f98dba6a-4c86-51a6-bb59-7155e56aed26
+
+	/// Personas naturales que llegaron a 4 o más contratos de servicios vigentes el mismo día (sql/analisis/10).
+	measure 'Personas con 4+ contratos simultáneos' =
+			CALCULATE (
+			    DISTINCTCOUNT ( Contratos[proveedor_key] ),
+			    KEEPFILTERS ( Proveedor[Máx. contratos simultáneos] >= 4 )
+			) + 0
+		formatString: #,0
+		displayFolder: 5. Alertas
+		lineageTag: b6b97844-b66f-5942-a638-6466b055a58a
+
+	column entidad_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a54ac09f-f068-55cc-b8a0-bd1cf5bf5836
+		summarizeBy: none
+		sourceColumn: entidad_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column proveedor_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2b312309-17e9-596e-bd9b-44b9af4e4f06
+		summarizeBy: none
+		sourceColumn: proveedor_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column modalidad_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7a7fc27b-4df7-523d-82ac-ea75535dfa20
+		summarizeBy: none
+		sourceColumn: modalidad_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fecha de firma'
+		dataType: dateTime
+		isHidden
+		formatString: Short Date
+		lineageTag: 1d6bedee-0d92-5f67-8d44-a7b88bebf10b
+		summarizeBy: none
+		sourceColumn: fecha_firma
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Fecha de inicio'
+		dataType: dateTime
+		isHidden
+		formatString: Short Date
+		lineageTag: 9c0142ff-0c99-5f01-8b68-422682265935
+		summarizeBy: none
+		sourceColumn: fecha_inicio
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Fecha de fin'
+		dataType: dateTime
+		isHidden
+		formatString: Short Date
+		lineageTag: 8ab2a301-6684-5843-b3b8-80a71e764269
+		summarizeBy: none
+		sourceColumn: fecha_fin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Tipo de contrato'
+		dataType: string
+		lineageTag: ec0a493d-55d8-59bd-8c35-d2e60fe1385e
+		summarizeBy: none
+		sourceColumn: tipo_de_contrato
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Estado del contrato'
+		dataType: string
+		lineageTag: d0f14780-5f88-5574-a19d-4df835862eed
+		summarizeBy: none
+		sourceColumn: estado_contrato
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Proveedor pyme'
+		dataType: boolean
+		lineageTag: 2b06ff78-7deb-519a-9878-3de30edecd21
+		summarizeBy: none
+		sourceColumn: proveedor_es_pyme
+
+		annotation SummarizationSetBy = Automatic
+
+	column Valor
+		dataType: double
+		isHidden
+		lineageTag: e3fd41d8-571a-57bb-bd1f-b17f59f57ab4
+		summarizeBy: none
+		sourceColumn: valor_analisis
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Encadenado 30 días'
+		dataType: boolean
+		lineageTag: accddd11-6845-5189-ba96-d0e7c8d8284a
+		summarizeBy: none
+		sourceColumn: encadenado_30d
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Contratos = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaDatos & "fct_contratos.parquet")),
+				    Columnas = Table.SelectColumns(Origen, {"entidad_key", "proveedor_key", "modalidad_key", "fecha_firma", "fecha_inicio", "fecha_fin", "tipo_de_contrato", "estado_contrato", "proveedor_es_pyme", "valor_analisis", "encadenado_30d"}),
+				    Tipos = Table.TransformColumnTypes(
+				        Columnas,
+				        {{"entidad_key", Int64.Type}, {"proveedor_key", Int64.Type}, {"modalidad_key", Int64.Type}, {"fecha_firma", type date}, {"fecha_inicio", type date}, {"fecha_fin", type date}, {"tipo_de_contrato", type text}, {"estado_contrato", type text}, {"proveedor_es_pyme", type logical}, {"valor_analisis", type number}, {"encadenado_30d", type logical}}
+				    )
+				in
+				    Tipos
+
+	annotation PBI_ResultType = Table

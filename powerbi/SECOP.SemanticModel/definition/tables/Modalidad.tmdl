@@ -1,0 +1,45 @@
+/// Modalidad de contratación y su grupo (dim_modalidad).
+table Modalidad
+	lineageTag: a31627de-fd60-581e-8197-15be6da46c8b
+
+	column modalidad_key
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: 9c3970dc-ffb1-504e-b2df-e36ae7f42c03
+		summarizeBy: none
+		sourceColumn: modalidad_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modalidad
+		dataType: string
+		lineageTag: 830e6348-c9fd-575c-8b92-221e19a12b37
+		summarizeBy: none
+		sourceColumn: modalidad
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Grupo de modalidad'
+		dataType: string
+		lineageTag: 4a674bd7-f73e-5431-a82e-410bca0520c9
+		summarizeBy: none
+		sourceColumn: grupo_modalidad
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Modalidad = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaDatos & "dim_modalidad.parquet")),
+				    Columnas = Table.SelectColumns(Origen, {"modalidad_key", "modalidad", "grupo_modalidad"}),
+				    Tipos = Table.TransformColumnTypes(
+				        Columnas,
+				        {{"modalidad_key", Int64.Type}, {"modalidad", type text}, {"grupo_modalidad", type text}}
+				    )
+				in
+				    Tipos
+
+	annotation PBI_ResultType = Table

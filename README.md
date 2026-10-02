@@ -22,7 +22,7 @@ Preguntas secundarias:
 |---|---|
 | Fuente | [SECOP II - Contratos Electrónicos](https://www.datos.gov.co/d/jbjy-vk9h), Colombia Compra Eficiente |
 | Acceso | API Socrata de datos.gov.co con [sodapy](https://github.com/afeld/sodapy) |
-| Alcance actual | Contratos con `fecha_de_firma` en 2025 |
+| Alcance actual | Contratos con `fecha_de_firma` en 2025: 1.050.953 filas (descargadas el 2026-10-01) |
 | Crudo | `data/raw/secop2_contratos/<año>/pagina_*.jsonl.gz` + `manifest.json` |
 | Base analítica | `data/proyecto.duckdb` |
 
@@ -35,7 +35,7 @@ python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && pip install -e .
 cp .env.example .env        # opcional: pega tu token de datos.gov.co
 
-python -m proyecto.secop --anio 2025              # descarga + carga (~20 min)
+python -m proyecto.secop --anio 2025              # descarga + carga (~16 min, 447 MB de crudo)
 python -m proyecto.secop --anio 2025 --solo-carga # recarga desde el crudo
 ```
 
@@ -49,8 +49,8 @@ comando y continúa desde la última página guardada.
    página se guarda tal cual la devuelve la API (JSON Lines comprimido).
    `manifest.json` registra la consulta, la fecha de descarga y compara
    filas esperadas con descargadas.
-2. **`raw_contratos`** (DuckDB): el crudo con las 95 columnas como texto.
-3. **`stg_contratos`** (`sql/stg_contratos.sql`): 42 columnas con tipos
+2. **`raw_contratos`** (DuckDB): el crudo con las 95 columnas de la API más `:id`, todo como texto.
+3. **`stg_contratos`** (`sql/stg_contratos.sql`): 41 columnas con tipos
    (fechas, decimales, booleanos), nombres claros y los "No Definido"
    convertidos en nulos. No elimina filas ni corrige atípicos.
 

@@ -88,7 +88,14 @@ con.sql("""
 
 ## Resultados
 
-Pendiente.
+Tabla completa de hallazgos en [`sql/README.md`](sql/README.md). Lo principal (2025):
+
+- El 51,6 % del valor contratado va por contratación directa; en Antioquia, el 71,7 %.
+- 824 de las 1.988 entidades con 20 o más proveedores dan más del 50 % de su valor a sus 5 mayores.
+- Las pymes firman el 52,5 % de los contratos con empresas, pero reciben el 22,6 % del valor.
+- Diciembre tiene la menor cantidad de contratos y el mayor valor; en noviembre la directa llega al 69 % del valor del mes, antes de la ley de garantías.
+
+Informe en Power BI: pendiente.
 
 ## Autoría
 

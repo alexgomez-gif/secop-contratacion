@@ -86,7 +86,7 @@ Las reglas de limpieza (L1–L9) están en
   y objeto quedan en los hechos: tienen pocos valores o uno distinto por
   contrato y no tienen atributos propios.
 - **Dos columnas de valor.** `valor_contrato` es el dato original;
-  `valor_analisis` es el que se suma en las medidas (nulo en los 7.012
+  `valor_analisis` es el que se suma en las medidas (nulo en los 7.024
   contratos excluidos por L7).
 
 ## Diccionario

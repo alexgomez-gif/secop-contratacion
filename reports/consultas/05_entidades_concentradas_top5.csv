@@ -1,0 +1,21 @@
+puesto,nombre_entidad,departamento,orden,proveedores,valor_miles_millones,pct_top5,pct_mayor_proveedor,tipo_mayor_proveedor,entidades_que_cumplen
+1,MINISTERIO DE MINAS Y ENERGIA,Distrito Capital de Bogotá,Nacional,1933,5839.3,89.4,72.0,Jurídica,824
+2,RNEC,Distrito Capital de Bogotá,Nacional,190,3903.8,95.4,85.6,Jurídica,824
+3,MINISTERIO DE COMERCIO INDUSTRIA Y TURISMO - MINCIT,Distrito Capital de Bogotá,Nacional,475,3323.2,98.7,85.6,Jurídica,824
+4,MINSALUD,Distrito Capital de Bogotá,Nacional,2056,2104.2,86.0,76.8,Jurídica,824
+5,SANTIAGO DE CALI DISTRITO ESPECIAL - DEPARTAMENTO ADMINISTRATIVO DE HACIENDA,Valle del Cauca,Territorial,1164,1585.1,96.0,37.9,Jurídica,824
+6,ALCALDÍA DISTRITAL DE SANTA MARTA,Magdalena,Territorial,1787,1366.7,83.5,75.1,Jurídica,824
+7,UNP,Distrito Capital de Bogotá,Nacional,2491,1306.2,72.5,24.9,Jurídica,824
+8,EJERCITO DIRECCION DE ADQUISICIONES,Distrito Capital de Bogotá,Nacional,44,1218.6,92.7,76.7,Jurídica,824
+9,FONDO FINANCIERO DISTRITAL DE SALUD.,Distrito Capital de Bogotá,Territorial,2043,1167.8,72.6,19.2,Jurídica,824
+10,DEPARTAMENTO DE SANTANDER,Santander,Territorial,2601,1149.1,53.4,21.8,Jurídica,824
+11,GOBERNACIÓN DE RISARALDA**,Risaralda,Territorial,2866,1102.8,73.8,55.0,Jurídica,824
+12,MINISTERIO DE EDUCACION NACIONAL (MEN),Distrito Capital de Bogotá,Nacional,999,1044.8,64.2,26.0,Jurídica,824
+13,ICBF SEDE NACIONAL,Distrito Capital de Bogotá,Nacional,1979,993.9,72.6,37.6,Jurídica,824
+14,INSTITUTO DE DEPORTES Y RECREACION DE MEDELLIN,Antioquia,Territorial,2704,901.5,74.5,63.1,Jurídica,824
+15,MINTRABAJO NIVEL CENTRAL*/,Distrito Capital de Bogotá,Nacional,759,892.4,91.9,86.3,Jurídica,824
+16,INSTITUTO DE DESARROLLO URBANO,Distrito Capital de Bogotá,Territorial,1488,866.0,56.1,30.5,Jurídica,824
+17,GOBERNACION DEL DEPARTAMENTO DEL CESAR,Cesar,Territorial,1666,804.4,56.2,20.7,Jurídica,824
+18,DEPARTAMENTO DE CUNDINAMARCA-SECRETARIA DE HACIENDA,Cundinamarca,Territorial,324,794.6,86.9,31.5,Jurídica,824
+19,FUERZA AEROESPACIAL COLOMBIANA,Distrito Capital de Bogotá,Nacional,445,715.6,73.6,46.9,Jurídica,824
+20,UARIV-UNIDAD PARA LA ATENCION Y REPARACION INTEGRAL A LAS VICTIMAS,Distrito Capital de Bogotá,Nacional,2884,692.3,59.5,23.2,Jurídica,824

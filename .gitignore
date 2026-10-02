@@ -25,10 +25,22 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints/
 
-# Datos (se conserva la estructura de carpetas)
+# Datos (se conserva la estructura de carpetas con .gitkeep)
+#   data/raw/        crudo de la API, ~1 GB  (secop2_contratos, secop2_modificaciones)
+#   data/interim/    resultados intermedios
+#   data/processed/  Parquet del modelo para Power BI, ~92 MB
+#   data/*.duckdb    base analítica, ~2,5 GB
+#   data/*.log       registros de las descargas
+# Todo se regenera con los scripts (ver README).
 data/**
 !data/**/
 !data/**/.gitkeep
+
+# Red de seguridad: archivos de datos fuera de data/
+*.parquet
+*.jsonl.gz
+*.csv.gz
+*.log
 
 # Informes generados
 reports/figures/*

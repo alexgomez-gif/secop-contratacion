@@ -19,7 +19,7 @@ Power BI.
 | L4 | "No Definido" como texto | Convertir en nulo | 21.008 sin departamento, 2.250 sin documento |
 | L5 | Mayúsculas inconsistentes | Primera letra en mayúscula | 150.290 estados, 101.162 sectores |
 | L6 | No hay tipo de persona | Derivarlo del tipo de documento | 588.304 proveedores |
-| L7 | Valores imposibles o atípicos | Excluir de métricas de valor (`valor_analisis` nulo) | 7.012 (0,67 %) |
+| L7 | Valores imposibles o atípicos | Excluir de métricas de valor (`valor_analisis` nulo) | 7.024 (0,67 %) |
 | L8 | Fechas imposibles o incoherentes | Nulo fuera de 2000–2060; sin duración si fin < inicio | 14 y 599 |
 | L9 | Una entidad con varios nombres o ubicaciones | Datos del contrato más reciente | 26 entidades |
 
@@ -127,6 +127,15 @@ clasificar.
   percentil 99,9 es 245 millones. Casos revisados: un contrato de
   18.600 millones con 18,6 millones pagados (error de tres ceros) y un
   "médico general" por 120 días a 28.022 millones.
+- Valores de exactamente 1.000 veces lo pagado (tres ceros de más): una
+  persona natural con un suministro de 2.385.618 millones a la Gobernación
+  de Boyacá, del que se pagaron 2.385,6 millones; 225.000 millones en
+  carnes frías para la Agencia Logística con 225 millones pagados.
+- Contratos que valen más de 10 veces todo lo demás que firmó la entidad en
+  el año y casi no tienen pagos: 998.000 millones para "adecuar una cancha
+  de fútbol" en Sitionuevo (el resto de su contratación suma 38.500
+  millones); 92.400 millones en seguros para el municipio de Ansermanuevo.
+  Se detectaron al revisar los resultados de las consultas 01 y 05.
 
 **Decisión.** El contrato se conserva y cuenta en número de contratos,
 pero su `valor_analisis` queda nulo y `motivo_valor_excluido` explica por
@@ -137,6 +146,12 @@ qué. `valor_contrato` mantiene el dato original.
 | Valor cero o negativo | 6.920 | 0 |
 | Valor imposible (>= 100 billones) | 1 | 944,19 billones |
 | Persona natural en servicios > 1.000 M | 91 | 0,97 billones |
+| Error de tres ceros (valor = 1.000 x pagado) | 3 | 2,79 billones |
+| Desproporcionado para la entidad | 9 | 2,52 billones |
+
+Las reglas se evalúan en ese orden y cada contrato recibe el primer motivo
+que cumple. "Desproporcionado" se calcula contra los demás contratos que
+quedan después de las reglas anteriores.
 
 **Por qué estos umbrales.** 100 billones es una cota física: ningún
 contrato individual puede valer una quinta parte del presupuesto
@@ -146,8 +161,17 @@ casos legítimos altos. Contratos grandes con empresas (por ejemplo,
 3,3 billones de la Registraduría por una "solución integral") son plausibles y se
 conservan.
 
+"Error de tres ceros" exige que el cociente valor / pagado esté entre 999 y
+1.001: una coincidencia así no ocurre por azar. "Desproporcionado" exige
+tres condiciones a la vez (al menos 50.000 millones, más de 10 veces el
+resto de la entidad y menos del 10 % pagado). El pago es la salvaguarda:
+un contrato grande que sí se pagó, como 409.000 millones de servicios de
+salud de la Dirección de Sanidad Militar, se conserva aunque supere 28
+veces el resto de esa entidad.
+
 **Limitación conocida.** Un error de digitación en un contrato con una
-empresa (NIT) no se detecta con estas reglas.
+empresa que no cumpla ninguna de estas condiciones no se detecta. El valor
+que queda en métricas es 177,6 billones de COP.
 
 ### L8 · Fechas
 

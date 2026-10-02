@@ -134,6 +134,49 @@ def test_l7_valores_excluidos_de_metricas(cambios, motivo):
     assert fila == (motivo, motivo is not None)
 
 
+def test_l7_error_de_tres_ceros():
+    con = _modelo(
+        [
+            {
+                "valor_del_contrato": "18600000000",
+                "valor_pagado": "18600000",
+                "tipodocproveedor": "NIT",
+            }
+        ]
+    )
+    assert (
+        con.sql("SELECT motivo_valor_excluido FROM fct_contratos").fetchone()[0]
+        == "Error de tres ceros (valor = 1.000 x pagado)"
+    )
+
+
+def test_l7_contrato_desproporcionado_sin_pagos():
+    normales = [{"valor_del_contrato": "1000000000"} for _ in range(3)]
+    gigante = {"valor_del_contrato": "998000000000", "tipodocproveedor": "NIT"}
+    con = _modelo([*normales, gigante])
+    motivos = con.sql(
+        "SELECT motivo_valor_excluido, count(*) FROM fct_contratos "
+        "GROUP BY 1 ORDER BY 1"
+    ).fetchall()
+    assert motivos == [("Desproporcionado para la entidad", 1), (None, 3)]
+
+
+def test_l7_contrato_grande_pagado_se_conserva():
+    normales = [{"valor_del_contrato": "1000000000"} for _ in range(3)]
+    gigante = {
+        "valor_del_contrato": "409000000000",
+        "valor_pagado": "408990000000",
+        "tipodocproveedor": "NIT",
+    }
+    con = _modelo([*normales, gigante])
+    assert (
+        con.sql(
+            "SELECT count(*) FROM fct_contratos WHERE motivo_valor_excluido IS NOT NULL"
+        ).fetchone()[0]
+        == 0
+    )
+
+
 def test_l8_fechas_fuera_de_rango_quedan_nulas():
     con = _modelo(
         [

@@ -37,6 +37,7 @@ cp .env.example .env        # opcional: pega tu token de datos.gov.co
 
 python -m proyecto.secop --anio 2025              # descarga + carga (~16 min, 447 MB de crudo)
 python -m proyecto.secop --anio 2025 --solo-carga # recarga desde el crudo
+python -m proyecto.modelo                         # limpieza + modelo estrella + Parquet (~15 s)
 ```
 
 La descarga es reanudable: si se interrumpe, vuelve a ejecutar el mismo
@@ -53,17 +54,33 @@ comando y continúa desde la última página guardada.
 3. **`stg_contratos`** (`sql/stg_contratos.sql`): 41 columnas con tipos
    (fechas, decimales, booleanos), nombres claros y los "No Definido"
    convertidos en nulos. No elimina filas ni corrige atípicos.
+4. **Limpieza y modelo estrella** (`src/proyecto/modelo.py`, `sql/modelo/`):
+   `int_contratos` aplica las reglas L1–L9 y de ahí salen `fct_contratos`
+   (un contrato por fila) y las dimensiones `dim_entidad`, `dim_proveedor`,
+   `dim_modalidad` y `dim_fecha`. 13 validaciones automáticas detienen el
+   proceso si algo falla. Se exportan a `data/processed/*.parquet` para
+   Power BI.
+
+Documentación:
+
+- [Modelo de datos](docs/modelo_datos.md): diagrama, decisiones de diseño y diccionario.
+- [Decisiones de limpieza](docs/decisiones_limpieza.md): cada regla con su evidencia e impacto.
 
 ```python
 from proyecto.db import conectar
 
 con = conectar()
-con.sql("SELECT modalidad_de_contratacion, count(*) FROM stg_contratos GROUP BY 1")
+con.sql("""
+    SELECT m.grupo_modalidad, count(*) AS contratos, sum(f.valor_analisis) AS valor
+    FROM fct_contratos f JOIN dim_modalidad m USING (modalidad_key)
+    GROUP BY 1 ORDER BY 2 DESC
+""")
 ```
 
 ## Calidad conocida de la fuente
 
-- Valores de contrato absurdos (hasta 8,8·10²⁰ COP): no sumar sin filtrar.
+- Valores de contrato absurdos (hasta 8,8·10²⁰ COP en el histórico; 944
+  billones en 2025): sumar siempre `valor_analisis`, no `valor_contrato`.
 - Nulos escritos como texto ("No Definido") en proveedor, género, duración.
 - ~7 % de los contratos del dataset no tienen fecha de firma y quedan
   fuera de un filtro por año.

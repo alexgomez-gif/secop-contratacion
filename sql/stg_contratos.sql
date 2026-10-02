@@ -1,5 +1,6 @@
 -- Capa staging: tipos correctos, nulos explícitos y nombres claros.
 -- No elimina filas ni corrige valores atípicos: eso va en la capa de limpieza.
+-- L4 (docs/decisiones_limpieza.md): textos que significan "sin dato" -> NULL.
 CREATE OR REPLACE MACRO nulo_si_vacio(x) AS
     CASE
         WHEN trim(x) IN ('', 'No Definido', 'No definido', 'NO DEFINIDO', 'No Aplica')
